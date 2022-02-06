@@ -1,0 +1,14 @@
+﻿  main.cpp
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\Functions.h(9,20): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(437,57): warning C4244: 'argument': conversion from 'double' to 'const unsigned int', possible loss of data
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(437,102): warning C4244: 'argument': conversion from 'double' to 'const unsigned int', possible loss of data
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(450,21): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(451,22): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(466,21): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(467,22): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(475,21): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(476,22): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(483,21): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(484,22): warning C4018: '<': signed/unsigned mismatch
+C:\Projects\Excitons in semiconductor simulation\Excitons in semiconductor simulation\main.cpp(492,1): warning C4326: return type of 'main' should be 'int' instead of 'void'
+  Excitons in semiconductor simulation.vcxproj -> C:\Projects\Excitons in semiconductor simulation\Debug\Excitons in semiconductor simulation.exe
