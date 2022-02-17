@@ -473,7 +473,7 @@ public:
 		for (int i = 1; i < result.size() - 1; ++i)
 			for (int j = 1; j < result[0].size() - 1; ++j)
 			{
-				result[i][j] = (n[i + 1][j] - n[i - 1][j]) / (2 * dt) - D * (n[i][j + 1] - 2 * n[i][j] + n[i][j - 1]) / (dz * dz) + n[i][j] / tau - V * (n[i][j + 1] - n[i][j - 1]) / (2 * dz) -I[i][j] * rrp;
+				result[i][j] = (n[i + 1][j] - n[i - 1][j]) / (2 * dt) - D * (n[i][j + 1] - 2 * n[i][j] + n[i][j - 1]) / (dz * dz) + n[i][j] / tau - V * (n[i][j + 1] - n[i][j - 1]) / (2 * dz) -I[i][j] * rrp / tau;
 			}
 		ofstream resultFile;
 		resultFile.open("equationRightPart.txt");
@@ -482,6 +482,137 @@ public:
 				resultFile << (j + 1) * dz << "\t" << (i + 1) * dt << "\t" << result[i][j] << endl;
 		cout << "Done\n";
 		cin.get();
+	}
+	void equationSystemWithRecombinationsMonteKarloCheck()
+	{
+
+		double h;
+		int recombinationsNumber = 0;
+		int stepNumber = 0;
+		double dz = 0.05;
+		double dt = 0.005;
+		double tmax = 30 * dt;		
+		vector<vector<double>> excitonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
+		vector<vector<double>> photonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
+		for (int i = 1; i <= N; ++i)
+		{
+			//источник экситонов
+			h = uniDistrib() * (H - 2 * epsilon) + epsilon;
+			Vector3 u(0, 0, h);
+			bool counted = false;
+			double t = expDistrib(0.05);
+			while (!counted)
+			{
+			reverseRecombination:		//лейбл обратной рекомбинации
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), 0.05);
+
+				//проверка на выживание
+				if (uniDistrib() > survive_probability(R))	//частица не выжила
+				{
+					t += time_if_absorbed(R);
+					if (t < tmax)
+						excitonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+					//проверка на рекомбинацию в фотон
+					if (uniDistrib() <= rp)			//рекомбинация в фотон
+					{
+						++recombinationsNumber;
+						while (!counted)
+						{
+							u += randUnitVector() * expDistrib(l);
+							++stepNumber;
+							if (u.getZ() >= H || u.getZ() <= 0)
+							{
+								counted = true;
+							}
+							if (!counted && t < tmax)
+								photonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+							if (!counted && uniDistrib() < rrp)
+							{
+								++recombinationsNumber;
+								goto reverseRecombination;
+							}
+						}
+					}
+					//поглощение частицы
+					else
+					{
+						counted = true;
+					}
+				}
+				else
+				{
+					//движение экситона в точку сферы
+					u += exit_point_on_sphere(R);
+					++stepNumber;
+					t += first_passage_time(R);
+					//диффузионный выход на границу
+					if (abs(H - u.getZ()) <= epsilon || abs(u.getZ()) <= epsilon)
+					{
+						counted = true;
+					}
+					if (!counted && t < tmax)
+						excitonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+				}
+			}
+			if (i % 10000 == 0)
+				cout << i << endl;
+		}
+
+
+		//решаем обычное уравнение дрифта диффузии
+		vector<vector<double>> excitonNet2((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
+		for (int i = 1; i <= N; ++i)
+		{
+			//источник экситонов
+			h = uniDistrib() * (H - 2 * epsilon) + epsilon;
+			Vector3 u(0, 0, h);
+			bool counted = false;
+			double t = expDistrib(0.05);
+			while (!counted)
+			{
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), 0.05);
+				//проверка на выживание
+				if (uniDistrib() > survive_probability(R))	//частица не выжила
+				{
+					t += time_if_absorbed(R);
+					if (t < tmax)
+						excitonNet2[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+					counted = true;
+				}
+				else
+				{
+					//движение экситона в точку сферы
+					u += exit_point_on_sphere(R);
+					++stepNumber;
+					t += first_passage_time(R);
+					//диффузионный выход на границу
+					if (abs(H - u.getZ()) <= epsilon || abs(u.getZ()) <= epsilon)
+					{
+						counted = true;
+					}
+					if (!counted && t < tmax)
+						excitonNet2[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+				}
+			}
+			if (i % 10000 == 0)
+				cout << i << endl;
+		}
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+			{
+				photonNet[i][j] = photonNet[i][j] / N;
+				excitonNet[i][j] = excitonNet[i][j] / N;
+				excitonNet2[i][j] = excitonNet2[i][j] / N + rrp * photonNet[i][j];
+			}
+		ofstream excitonGrid, excitonGrid2;
+		excitonGrid.open("excitonGrid.txt");
+		excitonGrid2.open("excitonGrid2.txt");
+		for (int i = 1; i < excitonNet.size() - 1; ++i)
+			for (int j = 1; j < excitonNet[0].size() - 1; ++j)
+			{
+				excitonGrid << (j + 1) * dz << "\t" << (i + 1) * dt << "\t" << (double)excitonNet[i][j] << endl;
+				excitonGrid2 << (j + 1) * dz << "\t" << (i + 1) * dt << "\t" << (double)excitonNet2[i][j] << endl;
+			}
 	}
 	void doubleRecombinationSimulation()
 	{
@@ -593,7 +724,8 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.doubleRecombinationSimulation();
+	calc.equationSystemWithRecombinationsMonteKarloCheck();
+	//calc.doubleRecombinationSimulation();
 	//calc.equationSystemWithRecombinationsCheck();
 	//calc.twoLayersDiffusionCheck(1, 0.5, 0.5);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);
