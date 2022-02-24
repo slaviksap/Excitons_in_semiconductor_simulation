@@ -4,9 +4,81 @@
 #include"vector3.h"
 #include<cstdlib>
 #include"Functions.h"
+#include <inttypes.h>
 using namespace std;
 
+//walker
+//----------------------fast_drand40()----------------------------------—
+static double d40d = (double)(1LL << 40);
+static uint64_t d40m1 = (1LL << 40) - 1LL;
+uint64_t prev1 = 12LL;
 
+double randoms()
+{
+	prev1 = (prev1 * 762939453125LL) & d40m1;
+	return (double)prev1 / d40d;
+}
+//Функция подготовки массивов вероятности q и меток alias для Walker
+int walker_prep(vector<double>& p, double* q, int* alias)
+{
+	int p_cnt = p.size();
+	int* over = new int[p_cnt];
+	int* under = new int[2 * p_cnt];
+	memset(over, 0, sizeof(int) * p_cnt);
+	memset(under, 0, sizeof(int) * 2 * p_cnt);
+
+	int i, j, l, k, k_o = 0, k_u = 0;
+
+	for (i = 0; i < p_cnt; i++)
+	{
+		alias[i] = 0;
+		q[i] = 0.;
+	}
+
+	for (i = 0; i < p_cnt; i++)
+	{
+		q[i] = p[i] * (double)p_cnt;
+		// assign a label to q[i]: overfull q>1, underfull g<=1
+		if (q[i] > 1.) { // overfull
+			over[k_o] = i;
+			k_o++;
+		}
+		else { // underfull
+			under[k_u] = i;
+			k_u++;
+		}
+
+	}
+
+	for (i = 0, j = 0; i < k_u && j < k_o; i++)
+	{
+		l = under[i];
+		k = over[j];
+		alias[l] = k; // number of q which >1
+		q[k] = (q[k] + q[l]) - 1.; // new value of q which was >1
+		if (q[k] < 1.) {
+			j++; // take next over element
+			under[k_u] = k; // put new under element
+			k_u++; // add the number of under elements
+		}
+		else if ((q[k] - 1.) <= 1e-15)
+			alias[k] = k;
+	}
+	return 0;
+}
+//Функция Walker возвращает случайный индекс, выбранный в соответствии с моделируемой плотностью :
+int walker(int p_cnt, double* q, int* alias)
+{
+	int i, num;
+
+	double rnd = randoms() * p_cnt;
+	i = (int)rnd;
+	rnd = randoms();
+	if (rnd <= q[i]) { num = i; }
+	else { num = alias[i]; }
+
+	return num;
+}
 extern const double Pi;
 class Calculation
 {
@@ -156,6 +228,22 @@ private:
 			return a * exp(z / L1) + b * exp(-z / L1) + 1;
 		else
 			return c * exp(z / L2) + d * exp(-z / L2) + 1;
+	}
+	void guessFromDistributionGrid(vector<vector<double>>& grid, int& time, int& coord)
+	{
+		double guess = uniDistrib();
+		double sum = 0;
+		for (int i = 0; i < grid.size();++i)
+			for (int j = 0; j < grid[0].size(); ++j)
+			{
+				sum += grid[i][j];
+				if (sum >= guess)
+				{
+					time = i;
+					coord = j;
+					return;
+				}
+			}
 	}
 public:
 	void print()
@@ -489,23 +577,25 @@ public:
 		double h;
 		int recombinationsNumber = 0;
 		int stepNumber = 0;
+		double sourceIntensity = 1;
 		double dz = 0.05;
-		double dt = 0.005;
+		double dt = 0.002;
 		double tmax = 30 * dt;		
 		vector<vector<double>> excitonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		vector<vector<double>> photonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		for (int i = 1; i <= N; ++i)
 		{
+			int lastTimeCell = 0, curTimeCell, lastCoordCell;
 			//источник экситонов
 			h = uniDistrib() * (H - 2 * epsilon) + epsilon;
+			lastCoordCell = (int)(h / dz);
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = expDistrib(0.05);
+			double t = 0;
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), 0.05);
-
+				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
@@ -544,33 +634,83 @@ public:
 					//движение экситона в точку сферы
 					u += exit_point_on_sphere(R);
 					++stepNumber;
-					t += first_passage_time(R);
+					t += first_passage_time(R);				
 					//диффузионный выход на границу
 					if (abs(H - u.getZ()) <= epsilon || abs(u.getZ()) <= epsilon)
 					{
 						counted = true;
 					}
 					if (!counted && t < tmax)
+					{
 						excitonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+						/*curTimeCell = (int)(t / dt);
+						if (curTimeCell - lastTimeCell > 1)
+						{
+							for (int i = lastTimeCell + 1; i < curTimeCell; ++i)
+								excitonNet[i][lastCoordCell]++;
+						}
+						lastTimeCell = (int)(t / dt);
+						lastCoordCell = (int)(u.getZ() / dz);*/
+					}
 				}
 			}
 			if (i % 10000 == 0)
 				cout << i << endl;
 		}
-
-
-		//решаем обычное уравнение дрифта диффузии
+		for (int i = 0; i < photonNet.size(); ++i)
+		{
+			int count = 0;
+			for (int j = 0; j < photonNet[0].size(); ++j)
+			{
+				photonNet[i][j] = photonNet[i][j] / N / (dz * dt) * sourceIntensity;
+				excitonNet[i][j] = excitonNet[i][j] / N / (dz * dt) * sourceIntensity;
+				count += excitonNet[i][j];
+			}
+			cout << count << endl;
+		}
+		cin.get();
+		//Подготовка функции источника и алгоритма Уолкера
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+				photonNet[i][j] = photonNet[i][j] * rrp;
+		for (int i = 0; i < photonNet.size(); ++i)
+			photonNet[i][0] += sourceIntensity;
+		double gridSum = 0;
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+				gridSum += photonNet[i][j];
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+				photonNet[i][j] = photonNet[i][j] / gridSum;
+		cout << gridSum << "\n\n";
+		vector<double> walkerVector;
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+				walkerVector.push_back(photonNet[i][j]);
+		int* alias_w = new int[N]; // alias for Walker
+		double* q_w = new double[N]; // q = prob*p_cnt for Walker
+		walker_prep(walkerVector, q_w, alias_w);
+		cout << "Preparation ends\n";
+		//решаем обычное уравнение дрифта диффузии дополненное источником фотонов
 		vector<vector<double>> excitonNet2((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
-			h = uniDistrib() * (H - 2 * epsilon) + epsilon;
+			int time, coord, guess;
+			guess = walker(walkerVector.size(), q_w, alias_w);
+			time = guess / (int)photonNet[0].size();
+			coord = guess % (int)photonNet[0].size();
+			h = coord * dz;
+			if (h < epsilon)
+				h = epsilon * 2;
+			if (h > H - epsilon)
+				h = H - epsilon * 2;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = expDistrib(0.05);
+			double t = time * dt;
 			while (!counted)
 			{
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), 0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
@@ -597,13 +737,9 @@ public:
 			if (i % 10000 == 0)
 				cout << i << endl;
 		}
-		for (int i = 0; i < photonNet.size(); ++i)
-			for (int j = 0; j < photonNet[0].size(); ++j)
-			{
-				photonNet[i][j] = photonNet[i][j] / N;
-				excitonNet[i][j] = excitonNet[i][j] / N;
-				excitonNet2[i][j] = excitonNet2[i][j] / N + rrp * photonNet[i][j];
-			}
+		for (int i = 0; i < excitonNet2.size(); ++i)
+			for (int j = 0; j < excitonNet2[0].size(); ++j)
+				excitonNet2[i][j] = excitonNet2[i][j] / N / (dz * dt) * photonNet[i][j] * gridSum;
 		ofstream excitonGrid, excitonGrid2;
 		excitonGrid.open("excitonGrid.txt");
 		excitonGrid2.open("excitonGrid2.txt");
