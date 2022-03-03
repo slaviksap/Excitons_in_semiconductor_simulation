@@ -67,6 +67,11 @@ double min(double x1, double x2, double x3)
 	return x3;
 }
 
+double min(double x1, double x2, double x3, double x4)
+{
+	return min(min(x1, x2), min(x3, x4));
+}
+
 double max(vector<double> v)
 {
 	double max = v[0];
@@ -92,4 +97,21 @@ double vectorsAzimut(Vector3& u)
 	if (u.getY() >= 0)
 		return Pi + atan(u.getY() / u.getX());
 	return atan(u.getY() / u.getX()) - Pi;
+}
+
+double squared(double x)
+{
+	return x * x;
+}
+
+double cylinderDistance(Vector3& v, double cylX, double cylY, double cylR)
+{
+	return sqrt(squared(cylX - v.getX()) + squared(cylY - v.getY())) - cylR;
+}
+
+bool isInsideCylinder(Vector3& v, double cylX, double cylY, double cylR)
+{
+	if (sqrt(squared(cylX - v.getX()) + squared(cylY - v.getY())) < cylR)
+		return true;
+	return false;
 }

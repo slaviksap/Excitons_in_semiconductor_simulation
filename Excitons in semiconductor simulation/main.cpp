@@ -579,8 +579,8 @@ public:
 		int stepNumber = 0;
 		double sourceIntensity = 1;
 		double dz = 0.05;
-		double dt = 0.002;
-		double tmax = 30 * dt;		
+		double dt = 0.005;
+		double tmax = 50 * dt;		
 		vector<vector<double>> excitonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		vector<vector<double>> photonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		for (int i = 1; i <= N; ++i)
@@ -615,7 +615,7 @@ public:
 								counted = true;
 							}
 							if (!counted && t < tmax)
-								photonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+								photonNet[(int)(t / dt)][(int)(u.getZ() / dz)] += 1.0 / 10;
 							if (!counted && uniDistrib() < rrp)
 							{
 								++recombinationsNumber;
@@ -643,14 +643,14 @@ public:
 					if (!counted && t < tmax)
 					{
 						excitonNet[(int)(t / dt)][(int)(u.getZ() / dz)]++;
-						/*curTimeCell = (int)(t / dt);
+						curTimeCell = (int)(t / dt);
 						if (curTimeCell - lastTimeCell > 1)
 						{
-							for (int i = lastTimeCell + 1; i < curTimeCell; ++i)
-								excitonNet[i][lastCoordCell]++;
+							for (int timeLost = lastTimeCell + 1; timeLost < curTimeCell; ++timeLost)
+								excitonNet[timeLost][lastCoordCell]++;
 						}
 						lastTimeCell = (int)(t / dt);
-						lastCoordCell = (int)(u.getZ() / dz);*/
+						lastCoordCell = (int)(u.getZ() / dz);
 					}
 				}
 			}
@@ -668,13 +668,12 @@ public:
 			}
 			cout << count << endl;
 		}
-		cin.get();
 		//Подготовка функции источника и алгоритма Уолкера
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
 				photonNet[i][j] = photonNet[i][j] * rrp;
-		for (int i = 0; i < photonNet.size(); ++i)
-			photonNet[i][0] += sourceIntensity;
+		for (int j = 0; j < photonNet[0].size(); ++j)
+			photonNet[0][j] += H/sourceIntensity;
 		double gridSum = 0;
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
@@ -697,6 +696,7 @@ public:
 		{
 			//источник экситонов
 			int time, coord, guess;
+			int lastTimeCell = 0, curTimeCell, lastCoordCell;
 			guess = walker(walkerVector.size(), q_w, alias_w);
 			time = guess / (int)photonNet[0].size();
 			coord = guess % (int)photonNet[0].size();
@@ -706,6 +706,7 @@ public:
 			if (h > H - epsilon)
 				h = H - epsilon * 2;
 			Vector3 u(0, 0, h);
+			lastCoordCell = (int)(h / dz);
 			bool counted = false;
 			double t = time * dt;
 			while (!counted)
@@ -731,7 +732,17 @@ public:
 						counted = true;
 					}
 					if (!counted && t < tmax)
+					{
 						excitonNet2[(int)(t / dt)][(int)(u.getZ() / dz)]++;
+						curTimeCell = (int)(t / dt);
+						if (curTimeCell - lastTimeCell > 1)
+						{
+							for (int timeLost = lastTimeCell + 1; timeLost < curTimeCell; ++timeLost)
+								excitonNet2[timeLost][lastCoordCell]++;
+						}
+						lastTimeCell = (int)(t / dt);
+						lastCoordCell = (int)(u.getZ() / dz);
+					}
 				}
 			}
 			if (i % 10000 == 0)
@@ -765,7 +776,7 @@ public:
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()));
+				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
@@ -810,7 +821,6 @@ public:
 			if (i % 10000 == 0)
 				cout << i << endl;
 		}
-		double dt = 0.01;
 		sort(excitonTimes.begin(), excitonTimes.end());
 		sort(photonTimes.begin(), photonTimes.end());
 		ofstream excitonIntensityOverTime;
@@ -822,6 +832,7 @@ public:
 		photonTimes.erase(photonTimes.begin() + (int)photonTimes.size() * 0.98, photonTimes.end());
 
 		auto cur = excitonTimes.begin();
+		double dt = min(excitonTimes.back(), photonTimes.back()) / 100;
 		double t = dt;
 		while (cur != excitonTimes.end())
 		{
@@ -850,6 +861,201 @@ public:
 		excitonIntensityOverTime.close();
 		photonIntensityOverTime.close();
 	}
+	void doubleRecombinationWithCylindricalDislocationsSimaulation()
+	{
+		//граница цилиндрической дислокации(цилиндр высотой во весь слой с координатами центра (x,y) и радиусом 
+		double cylX = 0, cylY = 0.1, cylR = 0.01;
+		double h;
+		vector<double> excitonTimes;
+		vector<double> photonTimes;
+		for (int i = 1; i <= N; ++i)
+		{
+			//источник экситонов
+			h = H / 2;
+			Vector3 u(0, 0, h);
+			bool counted = false;
+			double t = 0;
+			while (!counted)
+			{
+			reverseRecombination1:		//лейбл обратной рекомбинации
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u, cylX, cylY, cylR)),0.05);
+
+				//проверка на выживание
+				if (uniDistrib() > survive_probability(R))	//частица не выжила
+				{
+					t += time_if_absorbed(R);
+					//проверка на рекомбинацию в фотон
+					if (uniDistrib() <= rp)			//рекомбинация в фотон
+					{
+						while (!counted)
+						{
+							u += randUnitVector() * expDistrib(l);
+							if (u.getZ() >= H || u.getZ() <= 0)
+							{
+								counted = true;
+								photonTimes.push_back(t);
+							}
+							if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+							{
+								counted = true;
+							}
+							if (!counted && uniDistrib() < rrp)
+							{
+								goto reverseRecombination1;
+							}
+						}
+					}
+					//поглощение частицы
+					else
+					{
+						counted = true;
+					}
+				}
+				else
+				{
+					//движение экситона в точку сферы
+					u += exit_point_on_sphere(R);
+					t += first_passage_time(R);
+					//диффузионный выход на границу
+					if (abs(H - u.getZ()) <= epsilon || abs(u.getZ()) <= epsilon)
+					{
+						counted = true;
+						excitonTimes.push_back(t);
+					}
+					if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+						counted = true;
+				}
+			}
+			if (i % 10000 == 0)
+				cout << i << endl;
+		}
+		sort(excitonTimes.begin(), excitonTimes.end());
+		sort(photonTimes.begin(), photonTimes.end());
+		ofstream excitonIntensityOverTime;
+		ofstream photonIntensityOverTime;
+		excitonIntensityOverTime.open("excitonsIntensityAtBoundaryOverTimeWithCylinderDislocation.txt");
+		photonIntensityOverTime.open("photonsIntensityAtBoundaryOverTimeWithCylinderDislocation.txt");
+
+		excitonTimes.erase(excitonTimes.begin() + (int)excitonTimes.size() * 0.98, excitonTimes.end());
+		photonTimes.erase(photonTimes.begin() + (int)photonTimes.size() * 0.98, photonTimes.end());
+
+		auto cur = excitonTimes.begin();
+		double dt = min(excitonTimes.back(), photonTimes.back()) / 100;
+		double t = dt;
+		while (cur != excitonTimes.end())
+		{
+			int count = 0;
+			while (*cur < t && cur != excitonTimes.end())
+			{
+				count++;
+				cur++;
+			}
+			excitonIntensityOverTime << t << "\t" << (double)count / N << endl;
+			t += dt;
+		}
+		cur = photonTimes.begin();
+		t = dt;
+		while (cur != photonTimes.end())
+		{
+			int count = 0;
+			while (*cur < t && cur != photonTimes.end())
+			{
+				count++;
+				cur++;
+			}
+			photonIntensityOverTime << t << "\t" << (double)count / N << endl;
+			t += dt;
+		}
+		excitonIntensityOverTime.close();
+		photonIntensityOverTime.close();
+	}
+	void doubleRecombinationWithCylindricalDislocationHitMap()
+	{
+		//граница цилиндрической дислокации(цилиндр высотой во весь слой с координатами центра (x,y) и радиусом 
+		double cylX = 0.05, cylY = 0.1, cylR = 0.07;
+		double h;
+		double dx = 0.01, dy = 0.01;
+		int netSize = 30;
+		vector<vector<double>> excitonNet(netSize*2, vector<double>(netSize * 2, 0));
+		vector<vector<double>> photonNet(netSize * 2, vector<double>(netSize * 2, 0));
+		for (int i = 1; i <= N; ++i)
+		{
+			//источник экситонов
+			h = 3 * H / 4;
+			Vector3 u(0, 0, h);
+			bool counted = false;
+			while (!counted)
+			{
+			reverseRecombination1:		//лейбл обратной рекомбинации
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u, cylX, cylY, cylR)), 0.05);
+
+				//проверка на выживание
+				if (uniDistrib() > survive_probability(R))	//частица не выжила
+				{
+					//проверка на рекомбинацию в фотон
+					if (uniDistrib() <= rp)			//рекомбинация в фотон
+					{
+						while (!counted)
+						{
+							u += randUnitVector() * expDistrib(l);
+							if (u.getZ() >= H)
+							{
+								counted = true;
+								if (u.getX() > -netSize*dx && u.getX() < netSize * dx && u.getY() > -netSize * dy && u.getY() < netSize * dy)
+									photonNet[(int)(u.getX() / dx) + netSize][(int)(u.getY() / dy) + netSize]++;
+							}
+							if (u.getZ() <= 0)
+								counted = true;
+							if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+							{
+								counted = true;
+							}
+							if (!counted && uniDistrib() < rrp)
+							{
+								goto reverseRecombination1;
+							}
+						}
+					}
+					//поглощение частицы
+					else
+					{
+						counted = true;
+					}
+				}
+				else
+				{
+					//движение экситона в точку сферы
+					u += exit_point_on_sphere(R);
+					//диффузионный выход на границу
+					if (abs(H - u.getZ()) <= epsilon)
+					{
+						counted = true;
+						if (u.getX() > -netSize * dx && u.getX() < netSize * dx && u.getY() > -netSize * dy && u.getY() < netSize * dy)
+							excitonNet[(int)(u.getX() / dx) + netSize][(int)(u.getY() / dy) + netSize]++;
+					}
+					if (abs(u.getZ()) <= epsilon)
+						counted = true;
+					if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+						counted = true;
+				}
+			}
+			if (i % 10000 == 0)
+				cout << i << endl;
+		}
+		ofstream excitonIntensity;
+		ofstream photonIntensity;
+		excitonIntensity.open("excitonsIntensityAtBoundaryHitMap.txt");
+		photonIntensity.open("photonsIntensityAtBoundaryHitMap.txt");
+
+		for (int i = 0; i < excitonNet.size(); ++i)
+			for (int j = 0; j < excitonNet[0].size(); ++j)
+				excitonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << excitonNet[i][j] / N << endl;
+		for (int i = 0; i < photonNet.size(); ++i)
+			for (int j = 0; j < photonNet[0].size(); ++j)
+				photonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << photonNet[i][j] / N << endl;
+		excitonIntensity.close();
+		photonIntensity.close();
+	}
 };
 void main()
 {
@@ -860,8 +1066,10 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.equationSystemWithRecombinationsMonteKarloCheck();
+	calc.doubleRecombinationWithCylindricalDislocationHitMap();
+	//calc.equationSystemWithRecombinationsMonteKarloCheck();
 	//calc.doubleRecombinationSimulation();
+	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();
 	//calc.equationSystemWithRecombinationsCheck();
 	//calc.twoLayersDiffusionCheck(1, 0.5, 0.5);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);

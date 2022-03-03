@@ -19,26 +19,31 @@ C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simul
           [
               _Ty=double
           ]
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(673,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(674,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(676,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(679,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(680,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(682,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(683,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(687,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(688,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(740,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(741,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(746,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(747,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(588,26): warning C4101: curTimeCell: неиспользованная локальная переменная
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(821,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(822,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(855,1): warning C4326: возвращаемый тип "main" должен быть "int", а не "void"
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(672,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(673,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(675,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(678,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(679,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(681,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(682,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(686,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(687,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(751,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(752,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(757,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(758,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(831,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(832,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(939,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(940,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1050,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1051,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1053,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1054,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1061,1): warning C4326: возвращаемый тип "main" должен быть "int", а не "void"
   Создание кода
-  1 of 299 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+  1 of 283 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   Excitons in semiconductor simulation.vcxproj -> C:\Projects\Excitons_in_semiconductor_simulation\Release\Excitons in semiconductor simulation.exe
