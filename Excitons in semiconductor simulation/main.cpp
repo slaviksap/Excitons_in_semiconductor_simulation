@@ -26,15 +26,12 @@ int walker_prep(vector<double>& p, double* q, int* alias)
 	int* under = new int[2 * p_cnt];
 	memset(over, 0, sizeof(int) * p_cnt);
 	memset(under, 0, sizeof(int) * 2 * p_cnt);
-
 	int i, j, l, k, k_o = 0, k_u = 0;
-
 	for (i = 0; i < p_cnt; i++)
 	{
 		alias[i] = 0;
 		q[i] = 0.;
 	}
-
 	for (i = 0; i < p_cnt; i++)
 	{
 		q[i] = p[i] * (double)p_cnt;
@@ -49,7 +46,6 @@ int walker_prep(vector<double>& p, double* q, int* alias)
 		}
 
 	}
-
 	for (i = 0, j = 0; i < k_u && j < k_o; i++)
 	{
 		l = under[i];
@@ -141,19 +137,21 @@ private:
 	{
 		while (1)
 		{
+			double L = sqrt(tau * D);
+			double r = R / L;
 			int n = 0;
 			double S = 0;
 			double U = uniDistrib();
-			double c = (Pi * Pi) / (R * R) + 1 + (V * V * tau) / (4 * D);
+			double c = (Pi * Pi) / (r * r) + 1 + (V * V * tau) / (4 * D);
 			double x = expDistrib(1 / c);
 			while (1)
 			{
 				n += 1;
-				S += (n + 1) * (n + 1) * exp(-Pi * Pi * x * ((n + 1) * (n + 1) - 1) / (R * R));
+				S += (n + 1) * (n + 1) * exp(-Pi * Pi * x * ((n + 1) * (n + 1) - 1) / (r * r));
 				if (U >= S)
 					return x;
 				n += 1;
-				S -= (n + 1) * (n + 1) * exp(-Pi * Pi * x * ((n + 1) * (n + 1) - 1) / (R * R));
+				S -= (n + 1) * (n + 1) * exp(-Pi * Pi * x * ((n + 1) * (n + 1) - 1) / (r * r));
 				if (U < S)
 					break;
 			}
@@ -244,6 +242,23 @@ private:
 					return;
 				}
 			}
+	}
+	void createDislocationArray(vector<Cylinder>& dislocations, double R, int disNum,double squareLen)
+	{
+		for (int i = 1; i <= disNum; ++i)
+		{
+			while (1)
+			{
+				double x = uniDistrib() * squareLen - squareLen / 2 * H;
+				double y = uniDistrib() * squareLen - squareLen / 2 * H;
+				Cylinder cyl(x, y, R);
+				if (!isCylindersIntersec(cyl, dislocations))
+				{
+					dislocations.push_back(cyl);
+					break;
+				}
+			}
+		}
 	}
 public:
 	void print()
@@ -447,7 +462,7 @@ public:
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()),H/20);
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
@@ -524,7 +539,7 @@ public:
 		intensityGrid.open("intensityGrid.txt");
 		double tmax = min(excitonsPos[(int)excitonsPos.size() * 0.95].t, photonsPos[(int)photonsPos.size() * 0.95].t);
 		cout << tmax << endl;
-		double dz = 0.05;
+		double dz = 1;
 		double dt = 0.005;
 		vector<vector<double>> excitonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz),0));
 		auto cur = excitonsPos.begin();
@@ -578,9 +593,9 @@ public:
 		int recombinationsNumber = 0;
 		int stepNumber = 0;
 		double sourceIntensity = 1;
-		double dz = 0.05;
-		double dt = 0.005;
-		double tmax = 50 * dt;		
+		double dz = 2;
+		double dt = 0.01;
+		double tmax = 100 * dt;		
 		vector<vector<double>> excitonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		vector<vector<double>> photonNet((int)(tmax / dt) + 1, vector<double>((int)(H / dz), 0));
 		for (int i = 1; i <= N; ++i)
@@ -595,7 +610,7 @@ public:
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), H / 20);
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
@@ -615,7 +630,7 @@ public:
 								counted = true;
 							}
 							if (!counted && t < tmax)
-								photonNet[(int)(t / dt)][(int)(u.getZ() / dz)] += 1.0 / 10;
+								photonNet[(int)(t / dt)][(int)(u.getZ() / dz)] += 1.0;
 							if (!counted && uniDistrib() < rrp)
 							{
 								++recombinationsNumber;
@@ -673,7 +688,7 @@ public:
 			for (int j = 0; j < photonNet[0].size(); ++j)
 				photonNet[i][j] = photonNet[i][j] * rrp;
 		for (int j = 0; j < photonNet[0].size(); ++j)
-			photonNet[0][j] += H/sourceIntensity;
+			photonNet[0][j] += sourceIntensity;
 		double gridSum = 0;
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
@@ -686,8 +701,8 @@ public:
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
 				walkerVector.push_back(photonNet[i][j]);
-		int* alias_w = new int[N]; // alias for Walker
-		double* q_w = new double[N]; // q = prob*p_cnt for Walker
+		int* alias_w = new int[walkerVector.size()]; // alias for Walker
+		double* q_w = new double[walkerVector.size()]; // q = prob*p_cnt for Walker
 		walker_prep(walkerVector, q_w, alias_w);
 		cout << "Preparation ends\n";
 		//решаем обычное уравнение дрифта диффузии дополненное источником фотонов
@@ -711,7 +726,7 @@ public:
 			double t = time * dt;
 			while (!counted)
 			{
-				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()),H / 20);
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
@@ -750,7 +765,7 @@ public:
 		}
 		for (int i = 0; i < excitonNet2.size(); ++i)
 			for (int j = 0; j < excitonNet2[0].size(); ++j)
-				excitonNet2[i][j] = excitonNet2[i][j] / N / (dz * dt) * photonNet[i][j] * gridSum;
+				excitonNet2[i][j] = excitonNet2[i][j] / N / (dz * dt) * sourceIntensity;// *photonNet[i][j] * gridSum;
 		ofstream excitonGrid, excitonGrid2;
 		excitonGrid.open("excitonGrid.txt");
 		excitonGrid2.open("excitonGrid2.txt");
@@ -776,7 +791,7 @@ public:
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()),0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), H / 20);
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
@@ -865,6 +880,8 @@ public:
 	{
 		//граница цилиндрической дислокации(цилиндр высотой во весь слой с координатами центра (x,y) и радиусом 
 		double cylX = 0, cylY = 0.1, cylR = 0.01;
+		Cylinder cyl(cylX, cylY, cylR);
+		Cylinder epscyl(cylX, cylY, cylR + epsilon);
 		double h;
 		vector<double> excitonTimes;
 		vector<double> photonTimes;
@@ -878,7 +895,7 @@ public:
 			while (!counted)
 			{
 			reverseRecombination1:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u, cylX, cylY, cylR)),0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u,cyl)),0.05);
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
@@ -895,7 +912,7 @@ public:
 								counted = true;
 								photonTimes.push_back(t);
 							}
-							if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+							if (isInsideCylinder(u, epscyl))
 							{
 								counted = true;
 							}
@@ -922,7 +939,7 @@ public:
 						counted = true;
 						excitonTimes.push_back(t);
 					}
-					if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+					if (isInsideCylinder(u,epscyl))
 						counted = true;
 				}
 			}
@@ -972,10 +989,12 @@ public:
 	void doubleRecombinationWithCylindricalDislocationHitMap()
 	{
 		//граница цилиндрической дислокации(цилиндр высотой во весь слой с координатами центра (x,y) и радиусом 
-		double cylX = 0.05, cylY = 0.1, cylR = 0.07;
+		double cylX = 3, cylY = 4, cylR = 2;
+		Cylinder cyl(cylX, cylY, cylR);
+		Cylinder epscyl(cylX, cylY, cylR + epsilon);
 		double h;
-		double dx = 0.01, dy = 0.01;
-		int netSize = 30;
+		double dx = 0.8, dy = 0.8;
+		int netSize = 50;
 		vector<vector<double>> excitonNet(netSize*2, vector<double>(netSize * 2, 0));
 		vector<vector<double>> photonNet(netSize * 2, vector<double>(netSize * 2, 0));
 		for (int i = 1; i <= N; ++i)
@@ -984,10 +1003,11 @@ public:
 			h = 3 * H / 4;
 			Vector3 u(0, 0, h);
 			bool counted = false;
+			Vector3 lastPhotonPos;
 			while (!counted)
 			{
 			reverseRecombination1:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u, cylX, cylY, cylR)), 0.05);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), abs(cylinderDistance(u, cyl)), H / 20);
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
@@ -997,16 +1017,20 @@ public:
 					{
 						while (!counted)
 						{
+							lastPhotonPos = u;
 							u += randUnitVector() * expDistrib(l);
 							if (u.getZ() >= H)
 							{
 								counted = true;
+								double t = (H - lastPhotonPos.getZ()) / (u.getZ() - lastPhotonPos.getZ());
+								u.setX(lastPhotonPos.getX() + t * (u.getX() - lastPhotonPos.getX()));
+								u.setY(lastPhotonPos.getY() + t * (u.getY() - lastPhotonPos.getY()));
 								if (u.getX() > -netSize*dx && u.getX() < netSize * dx && u.getY() > -netSize * dy && u.getY() < netSize * dy)
 									photonNet[(int)(u.getX() / dx) + netSize][(int)(u.getY() / dy) + netSize]++;
 							}
 							if (u.getZ() <= 0)
 								counted = true;
-							if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+							if (isInsideCylinder(u, epscyl))
 							{
 								counted = true;
 							}
@@ -1035,7 +1059,7 @@ public:
 					}
 					if (abs(u.getZ()) <= epsilon)
 						counted = true;
-					if (isInsideCylinder(u, cylX, cylY, cylR + epsilon))
+					if (isInsideCylinder(u, epscyl))
 						counted = true;
 				}
 			}
@@ -1056,6 +1080,123 @@ public:
 		excitonIntensity.close();
 		photonIntensity.close();
 	}
+	void doubleRecombinationWithMultipleDislocations(double cylR,int dislocationNum)
+	{
+		//создание массива дислокаций
+		vector<Cylinder> dislocations;
+		vector<Cylinder> epsDislocations;
+		double squareLen = 3 * H;
+		createDislocationArray(dislocations, cylR, dislocationNum, squareLen);
+		for (int i = 0; i < dislocations.size(); ++i)
+		{
+			epsDislocations.push_back(Cylinder(dislocations[i].centerX, dislocations[i].centerY, cylR + epsilon));
+		}
+
+		double dt = 0.01;
+		double maxTime = 2;
+		vector<double> excitonTimes((int)(maxTime / dt), 0);
+		vector<double> photonTimes((int)(maxTime / dt),0);
+		for (int i = 1; i <= N; ++i)
+		{
+			//источник экситонов
+			Vector3 u(uniDistrib()*squareLen/2 - squareLen/4, uniDistrib() * squareLen / 2 - squareLen / 4, uniDistrib()*H);
+			bool counted = false;
+			if (isInsideCylinders(u, epsDislocations))
+				counted = true;
+			double t = 0;
+			
+			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
+			
+			while (!counted)
+			{
+			reverseRecombination1:		//лейбл обратной рекомбинации
+				particlesTimes.push_back(make_pair(t, 1));
+				double R = min(abs(H - u.getZ()), abs(u.getZ()), minDistance(u, dislocations), H / 10);
+
+				//проверка на выживание
+				if (uniDistrib() > survive_probability(R))	//частица не выжила
+				{
+					t += time_if_absorbed(R);
+					//проверка на рекомбинацию в фотон
+					if (uniDistrib() <= rp)			//рекомбинация в фотон
+					{
+						while (!counted)
+						{
+							u += randUnitVector() * expDistrib(l);
+							particlesTimes.push_back(make_pair(t, 0));
+							if (u.getZ() >= H || u.getZ() <= 0)
+							{
+								counted = true;
+							}
+							if (!counted && uniDistrib() < rrp)
+							{
+								goto reverseRecombination1;
+							}
+						}
+					}
+					//поглощение частицы
+					else
+					{
+						counted = true;
+					}
+				}
+				else
+				{
+					//движение экситона в точку сферы
+					u += exit_point_on_sphere(R);
+					t += first_passage_time(R);
+					//диффузионный выход на границу
+					if (abs(H - u.getZ()) <= epsilon || abs(u.getZ()) <= epsilon)
+					{
+						counted = true;
+						particlesTimes.push_back(make_pair(t, 1));
+					}
+					if (isInsideCylinders(u, epsDislocations))
+						counted = true;
+				}
+			}
+			if (i % 10000 == 0)
+				cout << i << endl;
+
+			//обработка массива данных
+			vector<int> uniquePhotonTimes;
+			for (int i = 0; i < particlesTimes.size(); ++i)
+			{
+				if (particlesTimes[i].second == 0)
+				{
+					int num = (int)(particlesTimes[i].first / dt);
+					if (uniquePhotonTimes.size() == 0 || uniquePhotonTimes.back() != num)
+						uniquePhotonTimes.push_back(num);
+				}
+			}
+			int lastTime = min((int)(particlesTimes.back().first / dt), (int)(maxTime / dt) - 1);
+			for (int i = 0; i < lastTime; ++i)
+				excitonTimes[i]++;
+			for (int num : uniquePhotonTimes)
+			{
+				if (num < lastTime)
+				{
+					photonTimes[num]++;
+					excitonTimes[num]--;
+				}
+			}
+		}
+		ofstream excitonNumberOverTime;
+		ofstream photonNumberOverTime;
+		excitonNumberOverTime.open("excitonsNumberAtBoundaryOverTimeWithMultipleDislocations.txt");
+		photonNumberOverTime.open("photonsNumberAtBoundaryOverTimeWithMultipleDislocations.txt");
+		for (int i = 0; i < excitonTimes.size(); ++i)
+		{
+			excitonNumberOverTime << i * dt << "\t" << excitonTimes[i] / N << endl;
+		}
+		for (int i = 0; i < photonTimes.size(); ++i)
+		{
+			photonNumberOverTime << i * dt << "\t" << photonTimes[i] / N << endl;
+		}
+		
+		excitonNumberOverTime.close();
+		photonNumberOverTime.close();
+	}
 };
 void main()
 {
@@ -1066,7 +1207,8 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.doubleRecombinationWithCylindricalDislocationHitMap();
+	calc.doubleRecombinationWithMultipleDislocations(5, 250);
+	//calc.doubleRecombinationWithCylindricalDislocationHitMap();
 	//calc.equationSystemWithRecombinationsMonteKarloCheck();
 	//calc.doubleRecombinationSimulation();
 	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();

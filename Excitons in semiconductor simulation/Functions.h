@@ -104,14 +104,64 @@ double squared(double x)
 	return x * x;
 }
 
-double cylinderDistance(Vector3& v, double cylX, double cylY, double cylR)
+struct Cylinder
 {
-	return sqrt(squared(cylX - v.getX()) + squared(cylY - v.getY())) - cylR;
-}
+	double centerX;
+	double centerY;
+	double R;
 
-bool isInsideCylinder(Vector3& v, double cylX, double cylY, double cylR)
-{
-	if (sqrt(squared(cylX - v.getX()) + squared(cylY - v.getY())) < cylR)
-		return true;
-	return false;
-}
+	Cylinder() {}
+	Cylinder(double x,double y,double r)
+	{
+		centerX = x;
+		centerY = y;
+		R = r;
+	}
+	friend double cylinderDistance(Vector3& v, Cylinder &cyl)
+	{
+		return abs(sqrt(squared(cyl.centerX - v.getX()) + squared(cyl.centerY - v.getY())) - cyl.R);
+	}
+	friend bool isInsideCylinder(Vector3& v, Cylinder &cyl)
+	{
+		if (sqrt(squared(cyl.centerX - v.getX()) + squared(cyl.centerY - v.getY())) < cyl.R)
+			return true;
+		return false;
+	}
+	friend double minDistance(Vector3& v, vector<Cylinder>& cyls)
+	{
+		double min = cylinderDistance(v,cyls[0]);
+		for (Cylinder cyl : cyls)
+		{
+			double value = cylinderDistance(v, cyl);
+			if (value < min)
+				min = value;
+		}
+		return min;
+	}
+	friend bool isInsideCylinders(Vector3& v, vector<Cylinder>& cyls)
+	{
+		for (Cylinder cyl : cyls)
+		{
+			if (isInsideCylinder(v, cyl))
+				return true;
+		}
+		return false;
+	}
+	friend bool isCylindersIntersec(Cylinder& cyl1, Cylinder& cyl2)
+	{
+		if (sqrt(squared(cyl1.centerX - cyl2.centerX) + squared(cyl1.centerY - cyl2.centerY)) < cyl1.R + cyl2.R)
+			return true;
+		return false;
+	}
+	friend bool isCylindersIntersec(Cylinder& cyl, vector<Cylinder>& cyls)
+	{
+		for (Cylinder cyl2 : cyls)
+		{
+			if (isCylindersIntersec(cyl, cyl2))
+				return true;
+		}
+		return false;
+	}
+};
+
+

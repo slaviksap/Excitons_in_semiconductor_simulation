@@ -10,6 +10,4 @@ ylabel('t');
 zlabel('\Phi');
 
 e = 0.05*0.05*exp(-0.05*t)
-plot(t,f)
-hold on
-plot (t,e)
+plot(z,t,f)
