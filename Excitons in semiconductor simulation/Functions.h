@@ -129,7 +129,7 @@ struct Cylinder
 	}
 	friend double minDistance(Vector3& v, vector<Cylinder>& cyls)
 	{
-		double min = cylinderDistance(v,cyls[0]);
+		double min = INT8_MAX;
 		for (Cylinder cyl : cyls)
 		{
 			double value = cylinderDistance(v, cyl);
