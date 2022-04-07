@@ -797,7 +797,7 @@ public:
 			h = H / 2;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = uniDistrib();
+			double t = expDistrib(0.1);
 
 			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
 
@@ -878,6 +878,10 @@ public:
 				}
 			}
 		}
+		for (int i = 1; i < excitonsOnBoundaryTimes.size(); ++i)
+		{
+			excitonsOnBoundaryTimes[i] += excitonsOnBoundaryTimes[i - 1];
+		}
 		for (int num = 0; num < photonTimes.size(); ++num)
 		{
 			photonTimes[num] = photonTimes[num] / N * sourceIntencity;
@@ -890,7 +894,7 @@ public:
 		ofstream file;
 		file.open("equationSystemCheckWithIntegration.txt");
 		for (int i = 1; i < concDeriv.size() - 1; ++i)
-			file << dt * i << "\t" << concDeriv[i] - D * (excitonsOnBoundaryTimes[i + 1] - excitonsOnBoundaryTimes[i])
+			file << dt * i << "\t" << concDeriv[i] - D * excitonsOnBoundaryTimes[i]*dt
 			+ excitonTimes[i] / tau - rrp * photonTimes[i] << endl;
 		file.close();
 	}

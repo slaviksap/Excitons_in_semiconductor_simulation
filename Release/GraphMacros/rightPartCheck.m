@@ -1,13 +1,13 @@
 hold on
-A1 = load('C:\\Projects\\Excitons_in_semiconductor_simulation\\Release\\equationRightPart.txt')
+A1 = load('C:\\Projects\\Excitons_in_semiconductor_simulation\\Release\\equationSystemCheckWithIntegration.txt')
 
-z = A1(:,1)
-t = A1(:,2)
-f = A1(:,3)
+t = A1(:,1)
+f = A1(:,2)
 
-xlabel('z');
-ylabel('t');
-zlabel('\Phi');
+xlabel('t');
+ylabel('F');
 
-e = 0.05*0.05*exp(-0.05*t)
-plot(z,t,f)
+e = 2*exp(-2*t)
+plot(t,f)
+hold on
+plot (t,e)

@@ -33,22 +33,23 @@ C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simul
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(779,21): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(780,22): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(859,23): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(881,25): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(888,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(881,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(885,25): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(892,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(964,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(965,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1074,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1075,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1192,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1193,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1195,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1196,22): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1217,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1292,23): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1318,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(896,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(968,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(969,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1078,70): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1079,67): warning C4244: аргумент: преобразование "double" в "const int", возможна потеря данных
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1196,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1197,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1199,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1200,22): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1221,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1296,23): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1322,21): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1332,1): warning C4326: возвращаемый тип "main" должен быть "int", а не "void"
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1326,21): warning C4018: <: несоответствие типов со знаком и без знака
+C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1336,1): warning C4326: возвращаемый тип "main" должен быть "int", а не "void"
   Создание кода
   2 of 333 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
