@@ -369,7 +369,7 @@ public:
 		ofstream analitGraph;
 		calcGraph.open("calcGraph.txt");
 		analitGraph.open("analitGraph.txt");
-		double dz = 0.05;
+		double dz = H / 50;
 		Calculation calc1 = *this, calc2 = *this;
 		calc1.D = D1;
 		calc2.D = D2;
@@ -797,7 +797,7 @@ public:
 			h = H / 2;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = expDistrib(0.1);
+			double t = expDistrib(0.5);
 
 			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
 
@@ -894,8 +894,8 @@ public:
 		ofstream file;
 		file.open("equationSystemCheckWithIntegration.txt");
 		for (int i = 1; i < concDeriv.size() - 1; ++i)
-			file << dt * i << "\t" << concDeriv[i] - D * excitonsOnBoundaryTimes[i]*dt
-			+ excitonTimes[i] / tau - rrp * photonTimes[i] << endl;
+			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i] - excitonsOnBoundaryTimes[i - 1])/dt
+			+ excitonTimes[i] / tau - rrp * photonTimes[i] *1000 << endl;
 		file.close();
 	}
 	void doubleRecombinationSimulation()
@@ -1115,14 +1115,14 @@ public:
 		Cylinder cyl(cylX, cylY, cylR);
 		Cylinder epscyl(cylX, cylY, cylR + epsilon);
 		double h;
-		double dx = 0.8, dy = 0.8;
-		int netSize = 50;
+		double dx = 0.2, dy = 0.2;
+		int netSize = 100;
 		vector<vector<double>> excitonNet(netSize*2, vector<double>(netSize * 2, 0));
 		vector<vector<double>> photonNet(netSize * 2, vector<double>(netSize * 2, 0));
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
-			h = 3 * H / 4;
+			h = 7 * H / 8;
 			Vector3 u(0, 0, h);
 			bool counted = false;
 			Vector3 lastPhotonPos;
@@ -1195,10 +1195,10 @@ public:
 
 		for (int i = 0; i < excitonNet.size(); ++i)
 			for (int j = 0; j < excitonNet[0].size(); ++j)
-				excitonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << excitonNet[i][j] / N << endl;
+				excitonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << excitonNet[i][j] << endl;
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
-				photonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << photonNet[i][j] / N << endl;
+				photonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << photonNet[i][j] << endl;
 		excitonIntensity.close();
 		photonIntensity.close();
 	}
@@ -1348,7 +1348,7 @@ void main()
 	//calc.doubleRecombinationSimulation();
 	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();
 	//calc.equationSystemWithRecombinationsCheck();
-	//calc.twoLayersDiffusionCheck(1, 0.5, 0.5);
+	//calc.twoLayersDiffusionCheck(10, 10000, 20);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);
 	//calc.laplasEquationSimaulationFromNonCentralPoint(R, r, tetta);
 }

@@ -7,7 +7,7 @@ f = A1(:,2)
 xlabel('t');
 ylabel('F');
 
-e = 2*exp(-2*t)
+e = exp(-2*t)
 plot(t,f)
 hold on
 plot (t,e)

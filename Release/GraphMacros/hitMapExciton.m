@@ -3,7 +3,7 @@ x = A1(:,1)
 y = A1(:,2)
 z = A1(:,3)
 
-n = 200;
+n = 500;
 [X, Y] = meshgrid(linspace(min(x),max(x),n), linspace(min(y),max(y),n));
 Z = griddata(x,y,z,X,Y);
 %// Remove the NaNs for imshow:
