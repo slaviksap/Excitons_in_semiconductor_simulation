@@ -895,7 +895,7 @@ public:
 		file.open("equationSystemCheckWithIntegration.txt");
 		for (int i = 1; i < concDeriv.size() - 1; ++i)
 			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i] - excitonsOnBoundaryTimes[i - 1])/dt
-			+ excitonTimes[i] / tau - rrp * photonTimes[i] *1000 << endl;
+			+ excitonTimes[i] / tau - rrp * photonTimes[i] *500 << endl;
 		file.close();
 	}
 	void doubleRecombinationSimulation()
