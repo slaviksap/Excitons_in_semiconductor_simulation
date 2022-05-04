@@ -51,8 +51,8 @@ C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simul
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1326,21): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Projects\Excitons_in_semiconductor_simulation\Excitons in semiconductor simulation\main.cpp(1336,1): warning C4326: возвращаемый тип "main" должен быть "int", а не "void"
   Создание кода
-  1 of 333 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+  2 of 333 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   Excitons in semiconductor simulation.vcxproj -> C:\Projects\Excitons_in_semiconductor_simulation\Release\Excitons in semiconductor simulation.exe
