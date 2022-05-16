@@ -794,7 +794,7 @@ public:
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
-			h = H / 2;
+			h = uniDistrib() * H;
 			Vector3 u(0, 0, h);
 			bool counted = false;
 			double t = expDistrib(0.5);
@@ -893,35 +893,50 @@ public:
 			concDeriv[i] = (excitonTimes[i + 1] - excitonTimes[i - 1]) / (2 * dt);
 		ofstream file;
 		file.open("equationSystemCheckWithIntegration.txt");
-		for (int i = 1; i < concDeriv.size() - 1; ++i)
-			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i] - excitonsOnBoundaryTimes[i - 1])/dt
-			+ excitonTimes[i] / tau - rrp * photonTimes[i] * photonTimes[i] << endl;
+		for (int i = 1; i < concDeriv.size() - 2; ++i)
+			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i + 1] - excitonsOnBoundaryTimes[i - 1]) / (2 * dt)
+			+ excitonTimes[i] / tau - 300*rrp * photonTimes[i] << endl;
 		file.close();
 	}
-	void doubleRecombinationSimulation()
+	void doubleRecombinationSimulation(int recombinationNumberParam) //0 - без рекомбинаций,1 - возможность один раз рекомбинировать и рекомбинировать обратно, 
+		//2 - множественные рекомбинации
 	{
 		double h;
 		vector<double> excitonTimes;
 		vector<double> photonTimes;
+		vector<double> absorbedTimes;
+		vector<double> trajectoryEndTimes;
+		int recombinationsCount = 0;
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
 			h = H / 2;
 			Vector3 u(0, 0, h);
 			bool counted = false;
+			bool reverseRecombinated = false;
 			double t = 0;
 			while (!counted)
 			{
 			reverseRecombination:		//лейбл обратной рекомбинации
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), H / 20);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()));
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
 					t += time_if_absorbed(R);
-					//проверка на рекомбинацию в фотон
-					if (uniDistrib() <= rp)			//рекомбинация в фотон
+					while (1)
 					{
+						double t_abs = time_if_absorbed(R) / first_passage_time(R);
+						if (t_abs < 1)
+						{
+							u += exit_point_on_sphere(t_abs * R);
+							break;
+						}
+					}
+					//проверка на рекомбинацию в фотон
+					if (recombinationNumberParam != 0 && uniDistrib() <= rp && !(recombinationNumberParam == 1 && reverseRecombinated))			//рекомбинация в фотон
+					{
+						recombinationsCount++;
 						while (!counted)
 						{
 							u += randUnitVector() * expDistrib(l);
@@ -929,9 +944,12 @@ public:
 							{
 								counted = true;
 								photonTimes.push_back(t);
+								trajectoryEndTimes.push_back(t);
 							}
 							if (!counted && uniDistrib() < rrp)
 							{
+								recombinationsCount++;
+								reverseRecombinated = true;
 								goto reverseRecombination;
 							}
 						}
@@ -940,6 +958,8 @@ public:
 					else
 					{
 						counted = true;
+						absorbedTimes.push_back(t);
+						trajectoryEndTimes.push_back(t);
 					}
 				}
 				else
@@ -952,6 +972,7 @@ public:
 					{
 						counted = true;
 						excitonTimes.push_back(t);
+						trajectoryEndTimes.push_back(t);
 					}
 				}
 			}
@@ -960,16 +981,31 @@ public:
 		}
 		sort(excitonTimes.begin(), excitonTimes.end());
 		sort(photonTimes.begin(), photonTimes.end());
+		sort(absorbedTimes.begin(), absorbedTimes.end());
+		sort(trajectoryEndTimes.begin(), trajectoryEndTimes.end());
+
 		ofstream excitonIntensityOverTime;
 		ofstream photonIntensityOverTime;
-		excitonIntensityOverTime.open("excitonsIntensityAtBoundaryOverTime.txt");
-		photonIntensityOverTime.open("photonsIntensityAtBoundaryOverTime.txt");
+
+		string paramString;
+		if (recombinationNumberParam == 0)
+			paramString = "NoRecombinations";
+		else if (recombinationNumberParam == 1)
+			paramString = "OneDoubleRecombination";
+		else if (recombinationNumberParam == 2)
+			paramString = "MultyDoubleRecombinations";
+
+		excitonIntensityOverTime.open("excitonsIntensityAtBoundaryOverTime" + paramString + ".txt");
+		photonIntensityOverTime.open("photonsIntensityAtBoundaryOverTime" + paramString + ".txt");
 
 		excitonTimes.erase(excitonTimes.begin() + (int)excitonTimes.size() * 0.98, excitonTimes.end());
-		photonTimes.erase(photonTimes.begin() + (int)photonTimes.size() * 0.98, photonTimes.end());
+		if (!photonTimes.empty())
+			photonTimes.erase(photonTimes.begin() + (int)photonTimes.size() * 0.98, photonTimes.end());
+		absorbedTimes.erase(absorbedTimes.begin() + (int)absorbedTimes.size() * 0.98, absorbedTimes.end());
+		trajectoryEndTimes.erase(trajectoryEndTimes.begin() + (int)trajectoryEndTimes.size() * 0.98, trajectoryEndTimes.end());
 
 		auto cur = excitonTimes.begin();
-		double dt = min(excitonTimes.back(), photonTimes.back()) / 100;
+		double dt = excitonTimes.back() / 100;
 		double t = dt;
 		while (cur != excitonTimes.end())
 		{
@@ -995,8 +1031,44 @@ public:
 			photonIntensityOverTime << t << "\t" << (double)count / N << endl;
 			t += dt;
 		}
+
+		ofstream absorbedExcitonsOverTime;
+		absorbedExcitonsOverTime.open("absorbedExcitonsOverTime" + paramString + ".txt");
+		cur = absorbedTimes.begin();
+		t = dt;
+		int count = 0;
+		while (cur != absorbedTimes.end())
+		{	
+			while (*cur < t && cur != absorbedTimes.end())
+			{
+				count++;
+				cur++;
+			}
+			absorbedExcitonsOverTime << t << "\t" << (double)count / N << endl;
+			t += dt;
+		}
+
+		ofstream aliveExcitonsOverTime;
+		aliveExcitonsOverTime.open("aliveExcitonsOverTime" + paramString + ".txt");
+		cur = trajectoryEndTimes.begin();
+		t = dt;
+		count = N;
+		while (cur != trajectoryEndTimes.end())
+		{
+			
+			while (*cur < t && cur != trajectoryEndTimes.end())
+			{
+				count--;
+				cur++;
+			}
+			aliveExcitonsOverTime << t << "\t" << (double)count / N << endl;
+			t += dt;
+		}
 		excitonIntensityOverTime.close();
 		photonIntensityOverTime.close();
+		absorbedExcitonsOverTime.close();
+		aliveExcitonsOverTime.close();
+		cout << (double)recombinationsCount / N << endl;
 	}
 	void doubleRecombinationWithCylindricalDislocationsSimulation()
 	{
@@ -1341,14 +1413,17 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.equationSystemWithRecombinationsMonteKarloCheck2();
+	//calc.equationSystemWithRecombinationsMonteKarloCheck2();
 	//calc.doubleRecombinationWithMultipleDislocations(5, 50);
 	//calc.doubleRecombinationWithCylindricalDislocationHitMap();
 	//calc.equationSystemWithRecombinationsMonteKarloCheck();
-	//calc.doubleRecombinationSimulation();
+	calc.doubleRecombinationSimulation(0);
+	calc.doubleRecombinationSimulation(1);
+	calc.doubleRecombinationSimulation(2);
 	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();
 	//calc.equationSystemWithRecombinationsCheck();
 	//calc.twoLayersDiffusionCheck(10, 10000, 20);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);
 	//calc.laplasEquationSimaulationFromNonCentralPoint(R, r, tetta);
+	cin.get();
 }

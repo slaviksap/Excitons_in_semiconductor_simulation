@@ -6,4 +6,7 @@ exc = A1(:,2)
 
 xlabel('t');
 ylabel('intensity');
-plot(t1,exc)
+p = plot(t1,exc)
+set(p,'linewidth', 2)
+legend('small spheres simulation r = H/20','max spheres simulation','max spheres with correction')
+set(legend,'fontsize',18)

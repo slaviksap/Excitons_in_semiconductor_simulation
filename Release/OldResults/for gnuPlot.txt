@@ -1,0 +1,9 @@
+plot "C:\\Projects\\Excitons in semiconductor simulation\\Release\\times density from non-central point.txt" using 1:2 w l lw 2 title 'Times density'
+plot [-1:1] "C:\\Projects\\Excitons in semiconductor simulation\\Release\\cos tetta density from non-central point.txt" using 1:2 w l lw 2 title 'Cos(tetta) density'
+plot [-3.15:3.15] [0:1] "C:\\Projects\\Excitons in semiconductor simulation\\Release\\phi density from non-central point.txt" using 1:2 w l lw 2 title 'phi density'
+
+plot [-1:1] [0:1] "C:\\Projects\\Excitons in semiconductor simulation\\Release\\cos tetta density from non-central point.txt" using 1:2 w l lw 2 title 'Cos(tetta) density'
+
+
+plot [-1:1] "C:\\Projects\\Excitons in semiconductor simulation\\Release\\cos tetta density from non-central point(simplified).txt" using 1:2 w l lw 2 title 'Cos(tetta) density'
+plot [-3.15:3.15] [0:1] "C:\\Projects\\Excitons in semiconductor simulation\\Release\\phi density from non-central point(simplified).txt" using 1:2 w l lw 2 title 'phi density'

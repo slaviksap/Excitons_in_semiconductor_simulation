@@ -8,6 +8,12 @@ xlabel('t');
 ylabel('F');
 
 e = exp(-2*t)
-plot(t,f)
+p1 = plot(t,f)
+set(p1,'linewidth', 2)
+
 hold on
-plot (t,e)
+p2 = plot(t,e)
+set(p2,'linewidth', 2)
+
+legend('simulated right part','exp(-2t)');
+set(legend,'fontsize',16)
