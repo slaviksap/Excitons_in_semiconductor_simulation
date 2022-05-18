@@ -7,7 +7,7 @@ f = A1(:,2)
 xlabel('t');
 ylabel('F');
 
-e = exp(-2*t)
+e = t/2
 p1 = plot(t,f)
 set(p1,'linewidth', 2)
 
@@ -15,5 +15,5 @@ hold on
 p2 = plot(t,e)
 set(p2,'linewidth', 2)
 
-legend('simulated right part','exp(-2t)');
+legend('simulated right part','1-t\2');
 set(legend,'fontsize',16)

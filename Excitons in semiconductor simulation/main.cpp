@@ -113,8 +113,7 @@ private:
 			double r = R / sqrt(tau * D);
 			if (norm(v) == 0)
 				return r / sinh(r);
-			double k = norm(v) * R / (2 * D);
-			return (mu * r / sinh(mu * r)) * sinh(k) / k;
+			return (mu * r / sinh(mu * r));
 		}
 		else
 		{
@@ -135,10 +134,10 @@ private:
 	}
 	double first_passage_time(double R)
 	{
+		double L = sqrt(tau * D);
+		double r = R / L;
 		while (1)
-		{
-			double L = sqrt(tau * D);
-			double r = R / L;
+		{			
 			int n = 0;
 			double S = 0;
 			double U = uniDistrib();
@@ -797,7 +796,7 @@ public:
 			h = uniDistrib() * H;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = expDistrib(0.5);
+			double t = 2*sqrt(uniDistrib());
 
 			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
 
@@ -805,12 +804,21 @@ public:
 			{
 			reverseRecombination1:		//лейбл обратной рекомбинации
 				particlesTimes.push_back(make_pair(t, 1));
-				double R = min(abs(H - u.getZ()), abs(u.getZ()), H / 20);
+				double R = min(abs(H - u.getZ()), abs(u.getZ()));
 
 				//проверка на выживание
 				if (uniDistrib() > survive_probability(R))	//частица не выжила
 				{
 					t += time_if_absorbed(R);
+					while (1)
+					{
+						double t_abs = time_if_absorbed(R) / first_passage_time(R);
+						if (t_abs < 1)
+						{
+							u += exit_point_on_sphere(t_abs * R);
+							break;
+						}
+					}
 					//проверка на рекомбинацию в фотон
 					if (uniDistrib() <= rp)			//рекомбинация в фотон
 					{
@@ -832,6 +840,7 @@ public:
 					else
 					{
 						counted = true;
+						particlesTimes.push_back(make_pair(t, 1));
 					}
 				}
 				else
@@ -866,7 +875,8 @@ public:
 					}
 				}
 				int lastTime = min((int)(particlesTimes.back().first / dt), (int)(maxTime / dt) - 1);
-				for (int i = 0; i < lastTime; ++i)
+				int firstTime = (int)(particlesTimes[0].first / dt);
+				for (int i = firstTime; i < lastTime; ++i)
 					excitonTimes[i]++;
 				for (int num : uniquePhotonTimes)
 				{
@@ -895,7 +905,7 @@ public:
 		file.open("equationSystemCheckWithIntegration.txt");
 		for (int i = 1; i < concDeriv.size() - 2; ++i)
 			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i + 1] - excitonsOnBoundaryTimes[i - 1]) / (2 * dt)
-			+ excitonTimes[i] / tau - 300*rrp * photonTimes[i] << endl;
+			+ excitonTimes[i] / tau - 600*rrp * photonTimes[i] << endl;
 		file.close();
 	}
 	void doubleRecombinationSimulation(int recombinationNumberParam) //0 - без рекомбинаций,1 - возможность один раз рекомбинировать и рекомбинировать обратно, 
@@ -1187,14 +1197,14 @@ public:
 		Cylinder cyl(cylX, cylY, cylR);
 		Cylinder epscyl(cylX, cylY, cylR + epsilon);
 		double h;
-		double dx = 0.2, dy = 0.2;
-		int netSize = 100;
+		double dx = 0.1, dy = 0.1;
+		int netSize = 80;
 		vector<vector<double>> excitonNet(netSize*2, vector<double>(netSize * 2, 0));
 		vector<vector<double>> photonNet(netSize * 2, vector<double>(netSize * 2, 0));
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
-			h = 7 * H / 8;
+			h = 3 * H / 4;
 			Vector3 u(0, 0, h);
 			bool counted = false;
 			Vector3 lastPhotonPos;
@@ -1267,10 +1277,10 @@ public:
 
 		for (int i = 0; i < excitonNet.size(); ++i)
 			for (int j = 0; j < excitonNet[0].size(); ++j)
-				excitonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << excitonNet[i][j] << endl;
+				excitonIntensity << (i - netSize/2) * dx << "\t" << (j - netSize / 2) * dy << "\t" << excitonNet[i][j] << endl;
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
-				photonIntensity << (i - 30) * dx << "\t" << (j - 30) * dy << "\t" << photonNet[i][j] << endl;
+				photonIntensity << (i - netSize / 2) * dx << "\t" << (j - netSize / 2) * dy << "\t" << photonNet[i][j] << endl;
 		excitonIntensity.close();
 		photonIntensity.close();
 	}
@@ -1413,17 +1423,16 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	//calc.equationSystemWithRecombinationsMonteKarloCheck2();
+	calc.equationSystemWithRecombinationsMonteKarloCheck2();
 	//calc.doubleRecombinationWithMultipleDislocations(5, 50);
 	//calc.doubleRecombinationWithCylindricalDislocationHitMap();
 	//calc.equationSystemWithRecombinationsMonteKarloCheck();
-	calc.doubleRecombinationSimulation(0);
-	calc.doubleRecombinationSimulation(1);
-	calc.doubleRecombinationSimulation(2);
+	//calc.doubleRecombinationSimulation(0);
+	//calc.doubleRecombinationSimulation(1);
+	//calc.doubleRecombinationSimulation(2);
 	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();
 	//calc.equationSystemWithRecombinationsCheck();
 	//calc.twoLayersDiffusionCheck(10, 10000, 20);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);
 	//calc.laplasEquationSimaulationFromNonCentralPoint(R, r, tetta);
-	cin.get();
 }
