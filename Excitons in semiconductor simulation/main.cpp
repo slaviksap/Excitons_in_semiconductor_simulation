@@ -111,9 +111,11 @@ private:
 		if (tau != INFINITY)
 		{
 			double r = R / sqrt(tau * D);
-			if (norm(v) == 0)
-				return r / sinh(r);
-			return (mu * r / sinh(mu * r));
+			double k = norm(v) * R / (2 * D);
+			if (k == 0)
+				return (mu * r / sinh(mu * r));
+			else
+				return (mu * r / sinh(mu * r)) * (sinh(k) / k);
 		}
 		else
 		{
@@ -178,6 +180,23 @@ private:
 					break;
 			}
 		}
+	}
+	double time_if_absorbed_density(double R, double t)
+	{
+		double k = norm(v) * R / (2 * D);
+		double F;
+		if (k == 0)
+			F = 1 - (mu * R / sqrt(D)) / sinh(mu * R / sqrt(D));
+		else
+			F = 1 - (mu * R / sqrt(D)) / sinh(mu * R / sqrt(D)) * sinh(k) / k;
+		double sum = 0;
+		for (int n = 1; n <= 1000; ++n)
+		{
+			double c = -(n * n * Pi * Pi * D / (R * R) + 1 / tau + norm(v) * norm(v) / (4 * D));
+			double p = 2 * n * n * Pi * Pi / (k * k + n * n * Pi * Pi);
+			sum += pow(-1, n + 1) * p * exp(c * t);
+		}
+		return sum / F / tau * (sinh(k) / k);
 	}
 	void arrayInDensity(vector<double>& array, ofstream& file, double dx)
 	{
@@ -440,6 +459,30 @@ public:
 			calcGraph << sourseHeight << "\t" << double(absorbed) / N << endl;
 			analitGraph << sourseHeight << "\t" << doubleLayerDiffusionEquationSolution(calc1, calc2, layerHeight, sourseHeight) << endl;
 		}
+	}
+	void timeIfAbsorbedDensityCheck(double R)
+	{
+		double dt = 0.00001;
+		double tmax = 0.001;
+		vector<int> times((int)(tmax / dt), 0);
+		for (int i = 1; i <= N; ++i)
+		{
+			double guessTime = time_if_absorbed(R);
+			if (guessTime < tmax)
+				times[(int)(guessTime / dt)]++;
+		}
+		ofstream checkSim;
+		checkSim.open("checkSim.txt");
+		for (int i = 0; i < times.size(); ++i)
+			checkSim << i * dt << "\t" << (double)times[i] / N / dt << endl;
+		checkSim.close();
+
+
+		ofstream checkAn;
+		checkAn.open("checkAn.txt");
+		for (int i = 0; i < (int)(tmax / dt); ++i)
+			checkAn << i * dt << "\t" << time_if_absorbed_density(R, i * dt) << endl;
+		checkAn.close();
 	}
 	void equationSystemWithRecombinationsCheck()
 	{
@@ -790,13 +833,13 @@ public:
 		vector<double> excitonTimes((int)(maxTime / dt), 0);
 		vector<double> photonTimes((int)(maxTime / dt), 0);
 		vector<double> excitonsOnBoundaryTimes((int)(maxTime / dt), 0);
-		for (int i = 1; i <= N; ++i)
+		for (int j = 1; j <= N; ++j)
 		{
 			//источник экситонов
 			h = uniDistrib() * H;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = 2*sqrt(uniDistrib());
+			double t = 0;
 
 			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
 
@@ -858,8 +901,8 @@ public:
 					}
 				}
 			}
-			if (i % 10000 == 0)
-				cout << i << endl;
+			if (j % 10000 == 0)
+				cout << j << endl;
 
 			//обработка массива данных
 			if (!particlesTimes.empty())
@@ -876,7 +919,7 @@ public:
 				}
 				int lastTime = min((int)(particlesTimes.back().first / dt), (int)(maxTime / dt) - 1);
 				int firstTime = (int)(particlesTimes[0].first / dt);
-				for (int i = firstTime; i < lastTime; ++i)
+				for (int i = firstTime; i <= lastTime; ++i)
 					excitonTimes[i]++;
 				for (int num : uniquePhotonTimes)
 				{
@@ -892,6 +935,8 @@ public:
 		{
 			excitonsOnBoundaryTimes[i] += excitonsOnBoundaryTimes[i - 1];
 		}
+		cout << excitonTimes[0] << endl;
+		cout << photonTimes[0] << endl;
 		for (int num = 0; num < photonTimes.size(); ++num)
 		{
 			photonTimes[num] = photonTimes[num] / N * sourceIntencity;
@@ -903,9 +948,8 @@ public:
 			concDeriv[i] = (excitonTimes[i + 1] - excitonTimes[i - 1]) / (2 * dt);
 		ofstream file;
 		file.open("equationSystemCheckWithIntegration.txt");
-		for (int i = 1; i < concDeriv.size() - 2; ++i)
-			file << dt * i << "\t" << concDeriv[i] + (excitonsOnBoundaryTimes[i + 1] - excitonsOnBoundaryTimes[i - 1]) / (2 * dt)
-			+ excitonTimes[i] / tau - 600*rrp * photonTimes[i] << endl;
+		for (int i = 0; i < concDeriv.size() - 2; ++i)
+			file << dt * i << "\t" << excitonTimes[i] << endl;
 		file.close();
 	}
 	void doubleRecombinationSimulation(int recombinationNumberParam) //0 - без рекомбинаций,1 - возможность один раз рекомбинировать и рекомбинировать обратно, 
@@ -1201,10 +1245,11 @@ public:
 		int netSize = 80;
 		vector<vector<double>> excitonNet(netSize*2, vector<double>(netSize * 2, 0));
 		vector<vector<double>> photonNet(netSize * 2, vector<double>(netSize * 2, 0));
+		int WTFCOUNT = 0;
 		for (int i = 1; i <= N; ++i)
 		{
 			//источник экситонов
-			h = 3 * H / 4;
+			h = 7 * H / 8;
 			Vector3 u(0, 0, h);
 			bool counted = false;
 			Vector3 lastPhotonPos;
@@ -1259,7 +1304,10 @@ public:
 					{
 						counted = true;
 						if (u.getX() > -netSize * dx && u.getX() < netSize * dx && u.getY() > -netSize * dy && u.getY() < netSize * dy)
+						{
 							excitonNet[(int)(u.getX() / dx) + netSize][(int)(u.getY() / dy) + netSize]++;
+							WTFCOUNT++;
+						}
 					}
 					if (abs(u.getZ()) <= epsilon)
 						counted = true;
@@ -1277,12 +1325,13 @@ public:
 
 		for (int i = 0; i < excitonNet.size(); ++i)
 			for (int j = 0; j < excitonNet[0].size(); ++j)
-				excitonIntensity << (i - netSize/2) * dx << "\t" << (j - netSize / 2) * dy << "\t" << excitonNet[i][j] << endl;
+				excitonIntensity << (i - netSize) * dx << "\t" << (j - netSize) * dy << "\t" << excitonNet[i][j] << endl;
 		for (int i = 0; i < photonNet.size(); ++i)
 			for (int j = 0; j < photonNet[0].size(); ++j)
-				photonIntensity << (i - netSize / 2) * dx << "\t" << (j - netSize / 2) * dy << "\t" << photonNet[i][j] << endl;
+				photonIntensity << (i - netSize) * dx << "\t" << (j - netSize) * dy << "\t" << photonNet[i][j] << endl;
 		excitonIntensity.close();
 		photonIntensity.close();
+		cout << WTFCOUNT << endl;
 	}
 	void doubleRecombinationWithMultipleDislocations(double cylR,int dislocationNum)
 	{
@@ -1423,7 +1472,8 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.equationSystemWithRecombinationsMonteKarloCheck2();
+	calc.timeIfAbsorbedDensityCheck(1);
+	//calc.equationSystemWithRecombinationsMonteKarloCheck2();
 	//calc.doubleRecombinationWithMultipleDislocations(5, 50);
 	//calc.doubleRecombinationWithCylindricalDislocationHitMap();
 	//calc.equationSystemWithRecombinationsMonteKarloCheck();
@@ -1435,4 +1485,6 @@ void main()
 	//calc.twoLayersDiffusionCheck(10, 10000, 20);
 	//calc.excitonBoundaryDensityFromNonCentralPoint(R , r, tetta);
 	//calc.laplasEquationSimaulationFromNonCentralPoint(R, r, tetta);
+	cout << "ready\n";
+	cin.get();
 }
