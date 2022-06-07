@@ -160,7 +160,7 @@ private:
 	}
 	double time_if_absorbed(double R)
 	{
-		double k = R / 2 * Pe;
+		double k = norm(v) * R / (2 * D);
 		while (1)
 		{
 			int n = 0;
@@ -196,7 +196,10 @@ private:
 			double p = 2 * n * n * Pi * Pi / (k * k + n * n * Pi * Pi);
 			sum += pow(-1, n + 1) * p * exp(c * t);
 		}
-		return sum / F / tau * (sinh(k) / k);
+		if (k == 0)
+			return sum / F / tau;
+		else
+			return sum / F / tau * (sinh(k) / k);
 	}
 	void arrayInDensity(vector<double>& array, ofstream& file, double dx)
 	{
@@ -839,7 +842,7 @@ public:
 			h = uniDistrib() * H;
 			Vector3 u(0, 0, h);
 			bool counted = false;
-			double t = 0;
+			double t = uniDistrib() * 2;
 
 			vector<pair<double, bool>> particlesTimes;//первое число - время фиксирования частицы, второе - её тип(1 - экситон, 0 - фотон)
 
@@ -934,6 +937,7 @@ public:
 		for (int i = 1; i < excitonsOnBoundaryTimes.size(); ++i)
 		{
 			excitonsOnBoundaryTimes[i] += excitonsOnBoundaryTimes[i - 1];
+			photonTimes[i] += photonTimes[i - 1];
 		}
 		cout << excitonTimes[0] << endl;
 		cout << photonTimes[0] << endl;
@@ -948,8 +952,11 @@ public:
 			concDeriv[i] = (excitonTimes[i + 1] - excitonTimes[i - 1]) / (2 * dt);
 		ofstream file;
 		file.open("equationSystemCheckWithIntegration.txt");
-		for (int i = 0; i < concDeriv.size() - 2; ++i)
-			file << dt * i << "\t" << excitonTimes[i] << endl;
+		for (int i = 2; i < concDeriv.size() - 2; ++i)
+			file << dt * i << "\t" << concDeriv[i]
+			+ (excitonsOnBoundaryTimes[i + 1] - excitonsOnBoundaryTimes[i - 1]) / (2 * dt)
+			+ excitonTimes[i] / tau
+			- (photonTimes[i + 1] - photonTimes[i - 1]) / (2 * dt) << endl;
 		file.close();
 	}
 	void doubleRecombinationSimulation(int recombinationNumberParam) //0 - без рекомбинаций,1 - возможность один раз рекомбинировать и рекомбинировать обратно, 
@@ -1472,14 +1479,14 @@ void main()
 	conditions.open("initial conditions.txt");
 	conditions >> R >> r >> tetta;
 	conditions.close();
-	calc.timeIfAbsorbedDensityCheck(1);
+	//calc.timeIfAbsorbedDensityCheck(100);
 	//calc.equationSystemWithRecombinationsMonteKarloCheck2();
 	//calc.doubleRecombinationWithMultipleDislocations(5, 50);
 	//calc.doubleRecombinationWithCylindricalDislocationHitMap();
 	//calc.equationSystemWithRecombinationsMonteKarloCheck();
-	//calc.doubleRecombinationSimulation(0);
-	//calc.doubleRecombinationSimulation(1);
-	//calc.doubleRecombinationSimulation(2);
+	calc.doubleRecombinationSimulation(0);
+	calc.doubleRecombinationSimulation(1);
+	calc.doubleRecombinationSimulation(2);
 	//calc.doubleRecombinationWithCylindricalDislocationsSimaulation();
 	//calc.equationSystemWithRecombinationsCheck();
 	//calc.twoLayersDiffusionCheck(10, 10000, 20);
